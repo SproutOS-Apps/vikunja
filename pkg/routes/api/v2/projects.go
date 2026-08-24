@@ -160,9 +160,6 @@ func projectsCreate(ctx context.Context, in *struct {
 		return nil, translateDomainError(err)
 	}
 	convertToMarkdown(ctx, &in.Body.Description)
-	// Create/Update don't compute the caller's permission; null says "read it"
-	// rather than echoing the zero value (0 = read), misleading for the owner.
-	in.Body.MaxPermission = models.PermissionUnknown
 	return &singleBody[models.Project]{Body: &in.Body}, nil
 }
 
@@ -185,7 +182,6 @@ func projectsUpdate(ctx context.Context, in *struct {
 		return nil, translateDomainError(err)
 	}
 	convertToMarkdown(ctx, &project.Description)
-	project.MaxPermission = models.PermissionUnknown // see projectsCreate
 	return &singleBody[models.Project]{Body: project}, nil
 }
 
