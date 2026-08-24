@@ -72,6 +72,28 @@ func TestProjectPermissions_OwnerOfParentOnMemberCreatedSubproject(t *testing.T)
 			}
 		}
 		assert.Equal(t, 2, seen, "both subprojects should show up in the owner's project list")
+
+		unrelated := &user.User{ID: 3, Username: "user3"}
+		for _, project := range []*Project{sub, subsub} {
+			canRead, _, err := (&Project{ID: project.ID}).CanRead(s, unrelated)
+			require.NoError(t, err)
+			assert.False(t, canRead, "%s: CanRead for unrelated user", project.Title)
+
+			isAdmin, err := (&Project{ID: project.ID}).IsAdmin(s, unrelated)
+			require.NoError(t, err)
+			assert.False(t, isAdmin, "%s: IsAdmin for unrelated user", project.Title)
+		}
+
+		allUnrelated, _, _, err := (&Project{Expand: ProjectExpandableRights}).ReadAll(s, unrelated, "", 1, 500)
+		require.NoError(t, err)
+		for _, project := range allUnrelated.([]*Project) {
+			assert.NotEqual(t, sub.ID, project.ID, "sub should not show up in an unrelated user's project list")
+			assert.NotEqual(t, subsub.ID, project.ID, "subsub should not show up in an unrelated user's project list")
+		}
+
+		memberIsAdmin, err := (&Project{ID: parent.ID}).IsAdmin(s, member)
+		require.NoError(t, err)
+		assert.False(t, memberIsAdmin, "%s: IsAdmin for write member", parent.Title)
 	}
 
 	t.Run("parent shared with the member directly", func(t *testing.T) {
