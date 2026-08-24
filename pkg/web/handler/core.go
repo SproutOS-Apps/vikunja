@@ -97,7 +97,6 @@ func DoReadOne(ctx context.Context, obj CObject, a web.Auth) (maxPermission int,
 		return 0, err
 	}
 
-	// After ReadOne: CanRead and ReadOne both rebuild obj from the db row.
 	clearMaxPermission(obj)
 
 	if err := s.Commit(); err != nil {

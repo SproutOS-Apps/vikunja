@@ -970,9 +970,7 @@ func addMaxPermissionToProjects(s *xorm.Session, projects []*Project, u *user.Us
 	return
 }
 
-// ClearMaxPermission marks the caller's permission as not computed. Only
-// addMaxPermissionToProjects (v1's expand=permissions) and the v2 handlers
-// resolve it; everywhere else the zero value would claim read-only access.
+// ClearMaxPermission reports the caller's permission as not computed; the zero value would claim read.
 func (p *Project) ClearMaxPermission() {
 	p.MaxPermission = PermissionUnknown
 }
