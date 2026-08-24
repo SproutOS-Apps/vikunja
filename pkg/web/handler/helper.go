@@ -32,17 +32,17 @@ type CObject interface {
 	web.Permissions
 }
 
-// maxPermissionReceiver is implemented by models which carry the requesting
-// user's permission in their response body. Their zero value means "read", so
-// leaving the field untouched would claim read-only access instead of "not
-// computed" — the Do* pipeline sets it explicitly for them.
-type maxPermissionReceiver interface {
-	SetMaxPermission(permission int)
+// maxPermissionClearer is implemented by models carrying the requesting user's
+// permission in their response body. The generic pipeline never resolves that
+// field for the body (v1 reports it in the x-max-permission header, v2 sets it
+// per handler), and its zero value is a real permission (read), so an untouched
+// field would claim read-only access instead of "not computed".
+type maxPermissionClearer interface {
+	ClearMaxPermission()
 }
 
-// setMaxPermission fills obj's max permission field if it has one.
-func setMaxPermission(obj CObject, permission int) {
-	if r, is := obj.(maxPermissionReceiver); is {
-		r.SetMaxPermission(permission)
+func clearMaxPermission(obj CObject) {
+	if c, is := obj.(maxPermissionClearer); is {
+		c.ClearMaxPermission()
 	}
 }

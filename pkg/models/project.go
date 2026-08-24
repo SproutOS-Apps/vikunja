@@ -970,6 +970,13 @@ func addMaxPermissionToProjects(s *xorm.Session, projects []*Project, u *user.Us
 	return
 }
 
+// ClearMaxPermission marks the caller's permission as not computed. Only
+// addMaxPermissionToProjects (v1's expand=permissions) and the v2 handlers
+// resolve it; everywhere else the zero value would claim read-only access.
+func (p *Project) ClearMaxPermission() {
+	p.MaxPermission = PermissionUnknown
+}
+
 // CheckIsArchived returns an ErrProjectIsArchived if the project is archived.
 // is_archived is materialized down the tree (archiving a parent flags all
 // descendants), so the project's own row is authoritative. A new project

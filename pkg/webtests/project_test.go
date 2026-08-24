@@ -105,7 +105,10 @@ func TestProject(t *testing.T) {
 			assert.NotContains(t, rec.Body.String(), `"owner":{"id":2,"name":"","username":"user2",`)
 			assert.NotContains(t, rec.Body.String(), `"tasks":`)
 			assert.Equal(t, "2", rec.Result().Header.Get("x-max-permission")) // User 1 is owner, so they should have admin permissions.
-			assert.Contains(t, rec.Body.String(), `"max_permission":2`)       // and the body must agree with the header
+			// v1 reports the permission in the header only; the body field is
+			// filled by expand=permissions on the list route and must not
+			// fall back to its zero value (0 = read) here.
+			assert.Contains(t, rec.Body.String(), `"max_permission":null`)
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
 			_, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "9999"})
@@ -194,12 +197,6 @@ func TestProject(t *testing.T) {
 				require.NoError(t, err)
 				assert.Contains(t, rec.Body.String(), `"title":"Test17"`)
 				assert.Equal(t, "2", rec.Result().Header.Get("x-max-permission"))
-				assert.Contains(t, rec.Body.String(), `"max_permission":2`)
-			})
-			t.Run("Shared Via Parent Project User read only reports read in the body", func(t *testing.T) {
-				rec, err := testHandler.testReadOneWithUser(nil, map[string]string{"project": "15"})
-				require.NoError(t, err)
-				assert.Contains(t, rec.Body.String(), `"max_permission":0`)
 			})
 		})
 	})
@@ -211,7 +208,6 @@ func TestProject(t *testing.T) {
 			assert.Contains(t, rec.Body.String(), `"title":"TestLoremIpsum"`)
 			// The description should not be updated but returned correctly
 			assert.Contains(t, rec.Body.String(), `description":"Lorem Ipsum`)
-			// Update doesn't resolve the caller's permission, so it must not claim read-only
 			assert.Contains(t, rec.Body.String(), `"max_permission":null`)
 		})
 		t.Run("Nonexisting", func(t *testing.T) {
