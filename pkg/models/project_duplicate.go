@@ -63,6 +63,14 @@ func (pd *ProjectDuplicate) CanCreate(s *xorm.Session, a web.Auth) (canCreate bo
 	return parent.CanWrite(s, a)
 }
 
+// ClearMaxPermission forwards to the nested project: Project is a named field,
+// not embedded, so the pipeline's hook would otherwise skip it.
+func (pd *ProjectDuplicate) ClearMaxPermission() {
+	if pd.Project != nil {
+		pd.Project.ClearMaxPermission()
+	}
+}
+
 // Create duplicates a project
 // @Summary Duplicate an existing project
 // @Description Copies the project, tasks, files, kanban data, assignees, comments, attachments, labels, relations and backgrounds from one project to a new one. User/team permissions and link shares are only copied when duplicate_shares is set to true. The user needs read access in the project and write access in the parent of the new project.
